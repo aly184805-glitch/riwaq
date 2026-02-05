@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Riwaq Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;font-family:Tahoma,Arial;background:#0b1020;color:#fff}
+header{text-align:center;padding:30px;background:#0e1530}
+header h1{color:#2ecc71;margin:0}
+section{max-width:650px;margin:30px auto;padding:20px}
+.card{background:#111a3a;padding:20px;border-radius:10px;margin-bottom:20px}
+input,button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:6px;font-size:16px}
+button{background:#2ecc71;color:#000;cursor:pointer}
+.buyBtn{background:#22c55e}
+.deleteBtn{background:#ef4444;color:#fff;margin-top:8px}
+.hidden{display:none}
+.wallet{background:#020617;padding:10px;border-radius:6px;word-break:break-all;margin:10px 0}
+.admin{border:1px dashed #555}
+.notice{
+  background:#1f2937;
+  border-right:4px solid #facc15;
+  padding:10px;
+  margin-top:10px;
+  font-size:14px;
+  color:#facc15;
+}
+small{color:#ccc}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Riwaq Digital</h1>
+  <p>متجر الكتب الرقمية – تسليم فوري</p>
+</header>
+
+<section>
+
+<!-- عرض المنتجات -->
+<div id="products"></div>
+
+<!-- صندوق الدفع -->
+<div id="payBox" class="card hidden">
+  <h3>💳 الدفع</h3>
+  <p>حوّل المبلغ إلى العنوان التالي (USDT TRC20):</p>
+  <div class="wallet">TCn8wX1g4HpdkX8gEN7BqRNWKCsSRzgsi8</div>
+
+  <div class="notice">
+    تنبيه: في حال عدم إتمام الدفع، لن يتم تحويل أو تحميل الملف.
+    يرجى الاحتفاظ بوصل الدفع كإثبات لإتمام العملية.
+  </div>
+
+  <small>
+  بالضغط على "تم الدفع" أنت تقر أنك قمت بالدفع فعليًا
+  </small>
+
+  <button onclick="confirmPayment()">✅ تم الدفع</button>
+
+  <div id="status" style="margin-top:15px"></div>
+</div>
+
+<!-- لوحة التحكم -->
+<div class="card admin">
+  <h3>🔐 لوحة التحكم</h3>
+  <input type="password" id="adminPass" placeholder="كلمة السر">
+  <button onclick="login()">دخول</button>
+
+  <div id="adminPanel" class="hidden">
+    <hr>
+    <input id="pname" placeholder="اسم الكتاب">
+    <input id="pprice" placeholder="السعر">
+    <input id="plink" placeholder="رابط التحميل (Google Drive)">
+    <button onclick="addProduct()">➕ إضافة كتاب</button>
+  </div>
+</div>
+
+</section>
+
+<script>
+/* ===== إعدادات ===== */
+const ADMIN_PASSWORD = "369369";
+let isAdmin = false;
+let products = JSON.parse(localStorage.getItem("products")||"[]");
+let currentLink = "";
+
+/* ===== حفظ ورسم ===== */
+function save(){
+  localStorage.setItem("products",JSON.stringify(products));
+  render();
+}
+
+function render(){
+  const box=document.getElementById("products");
+  box.innerHTML="";
+  products.forEach((p,i)=>{
+    box.innerHTML+=`
+    <div class="card">
+      <h3>📘 ${p.name}</h3>
+      <p>💰 السعر: ${p.price}</p>
+      <button class="buyBtn" onclick="buy(${i})">شراء</button>
+      ${isAdmin ? `<button class="deleteBtn" onclick="removeProduct(${i})">🗑 حذف</button>` : ``}
+    </div>`;
+  });
+}
+
+/* ===== شراء ===== */
+function buy(i){
+  currentLink = products[i].link;
+  document.getElementById("payBox").classList.remove("hidden");
+  document.getElementById("status").innerHTML="";
+  window.scrollTo(0,document.body.scrollHeight);
+}
+
+/* ===== تأكيد الدفع ===== */
+function confirmPayment(){
+  const status=document.getElementById("status");
+  status.innerHTML="⏳ جارٍ تجهيز التحميل، الرجاء الانتظار 15 ثانية...";
+  setTimeout(()=>{
+    status.innerHTML=
+      "<a href='"+currentLink+"' target='_blank'>"+
+      "<button>⬇️ تحميل الكتاب</button></a>";
+  },15000);
+}
+
+/* ===== دخول الأدمن ===== */
+function login(){
+  if(document.getElementById("adminPass").value===ADMIN_PASSWORD){
+    isAdmin = true;
+    document.getElementById("adminPanel").classList.remove("hidden");
+    render();
+  }else alert("كلمة السر خطأ");
+}
+
+/* ===== إضافة كتاب ===== */
+function addProduct(){
+  if(!pname.value||!pprice.value||!plink.value)
+    return alert("املأ جميع الحقول");
+  products.push({
+    name:pname.value,
+    price:pprice.value,
+    link:plink.value
+  });
+  pname.value=pprice.value=plink.value="";
+  save();
+}
+
+/* ===== حذف كتاب (للأدمن فقط) ===== */
+function removeProduct(index){
+  if(confirm("هل أنت متأكد من حذف هذا الكتاب؟")){
+    products.splice(index,1);
+    save();
+  }
+}
+
+/* تشغيل */
+render();
+</script>
+
+</body>
+</html>
